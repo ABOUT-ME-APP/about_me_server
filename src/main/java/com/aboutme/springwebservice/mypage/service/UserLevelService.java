@@ -135,9 +135,14 @@ public class UserLevelService {
     @Transactional
     public void updateUserLevelExperience(long userId, int color, boolean isDelete) {
         ArrayList<UserLevel> ul = userLevelRepository.getProgressingByUserId(userId);
-
-        UserLevelDTO ulDTO = new UserLevelDTO(ul.get(color));
-
+        UserLevelDTO ulDTO;
+        if(ul.size()==0) {
+            UserLevel u =new UserLevel(userId,color,1,0);
+            ulDTO = new UserLevelDTO(u);
+        }
+        else {
+            ulDTO= new UserLevelDTO(ul.get(color));
+        }
         int level = ulDTO.getLevel();
         int exp = ulDTO.getExperience();
         if(isDelete){   // 작성한 카드를 삭제했을 때
@@ -160,7 +165,7 @@ public class UserLevelService {
         ulDTO.setLevel(level);
         ulDTO.setExperience(exp);
 
-        userLevelRepository.updateUserLevelExperience(ulDTO.toEntity());
+        userLevelRepository.save(ulDTO.toEntity());
 
         return;
     }
