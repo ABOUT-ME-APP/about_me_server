@@ -135,37 +135,49 @@ public class UserLevelService {
     @Transactional
     public void updateUserLevelExperience(long userId, int color, boolean isDelete) {
         ArrayList<UserLevel> ul = userLevelRepository.getProgressingByUserId(userId);
-        UserLevelDTO ulDTO;
+        int level = 1;
+        int exp = 0;
+
         if(ul.size()==0) {
-            UserLevel u =new UserLevel(userId,color,1,0);
-            ulDTO = new UserLevelDTO(u);
-        }
-        else {
-            ulDTO= new UserLevelDTO(ul.get(color));
-        }
-        int level = ulDTO.getLevel();
-        int exp = ulDTO.getExperience();
-        if(isDelete){   // 작성한 카드를 삭제했을 때
-            if((--exp) == -1) { // exp가 0이면
-                if(level != 1) {
-                    --level;
-                    exp = 99;
-                }
-                else {
-                    exp = 0;
-                }
+
+            for(int i = 0; i < 5; i++){
+                UserLevelDTO ulReturnDTO = new UserLevelDTO();
+                ulReturnDTO.setUser_id(userId);
+                ulReturnDTO.setColor(i);
+                ulReturnDTO.setLevel(level);
+                ulReturnDTO.setExperience(i==color?1:0);
+                userLevelRepository.save(ulReturnDTO.toEntity());
+
             }
         }
-        else {  // 카드를 작성했을 때
-            // exp가 100이면 레벨 1 증가
-            level += (++exp) / 100;
-            exp %= 100;
+        else {
+            UserLevelDTO ulDTO= new UserLevelDTO(ul.get(color));
+            level = ulDTO.getLevel();
+            exp = ulDTO.getExperience();
+            if(isDelete){   // 작성한 카드를 삭제했을 때
+                if((--exp) == -1) { // exp가 0이면
+                    if(level != 1) {
+                        --level;
+                        exp = 99;
+                    }
+                    else {
+                        exp = 0;
+                    }
+                }
+            }
+            else {  // 카드를 작성했을 때
+                // exp가 100이면 레벨 1 증가
+                level += (++exp) / 100;
+                exp %= 100;
+            }
+
+            ulDTO.setLevel(level);
+            ulDTO.setExperience(exp);
+
+            userLevelRepository.updateUserLevelExperience(ulDTO.toEntity());
         }
 
-        ulDTO.setLevel(level);
-        ulDTO.setExperience(exp);
 
-        userLevelRepository.save(ulDTO.toEntity());
 
         return;
     }
